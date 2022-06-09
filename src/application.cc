@@ -4,19 +4,19 @@ void MinIMGView::init_sdl(Application &app) {
   //TODO: error checking
   SDL_Init(SDL_INIT_VIDEO);
   IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
-  app.window = SDL_CreateWindow("minimgview", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1024, 720, SDL_WINDOW_SHOWN);
+  app.window = SDL_CreateWindow("minimgview", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 800, 600, SDL_WINDOW_SHOWN);
   app.renderer = SDL_CreateRenderer(app.window, -1 , SDL_RENDERER_ACCELERATED);
   printf("SDL Initialized");
 }
 
-void MinIMGView::load_from_file(Application &app, std::string path) {
+void MinIMGView::render_image(Application &app, std::string path) {
   std::string wd = get_wd(path);
   Image img;
   img.path = path;
   img.x = 0;
   img.y = 0;
 
-  img.texture = loadTexture(img.path, app);
+  img.texture = load_texture(img.path, app);
   img.dest.x = img.x;
   img.dest.y = img.y;
 
@@ -28,19 +28,33 @@ void MinIMGView::load_from_file(Application &app, std::string path) {
 }
 
 void MinIMGView::render(Application &app, Image &img) {
+  SDL_QueryTexture(img.texture, nullptr, nullptr, &img.dest.w, &img.dest.h);
+  SDL_SetWindowSize(app.window, img.dest.w, img.dest.h);
 
+  SDL_RenderCopy(app.renderer, img.texture, nullptr, &img.dest);
+  SDL_RenderPresent(app.renderer);
 }
 
 void MinIMGView::run(Application &app, std::string path) {
   SDL_Event ev;
   int current = 0;
   printf("Loading file..");
-  load_from_file(app, path);
-  std::string wd = get_wd(path);
+  SDL_RenderClear(app.renderer);
+  render_image(app, path);
+  std::string wd;
   printf("\n PWD: %s", wd.c_str());
 
   //TODO: check if current path is a file or a directory
-  std::vector<std::string> file_list = load_from_wd(wd);
+  std::vector<std::string> file_list;
+
+  if(path.find(".") != std::string::npos) {
+    render_image(app,path);
+    wd = get_wd(path);
+    file_list = load_from_wd(wd);
+  } else {
+    file_list = load_from_wd(path);
+    render_image(app, file_list.at(0));
+  }
 
   while(1) {
     if(SDL_PollEvent(&ev) && ev.type == SDL_QUIT)
@@ -48,7 +62,7 @@ void MinIMGView::run(Application &app, std::string path) {
     if(ev.type == SDL_KEYDOWN) {
       if(current < (int) file_list.size()) {
         SDL_RenderClear(app.renderer);
-        load_from_file(app, file_list.at(current));
+        render_image(app, file_list.at(current));
         current++;
       } else {
         current = 0;
@@ -69,7 +83,7 @@ std::vector<std::string> MinIMGView::load_from_wd(std::string dir) {
   return files;
 }
 
-SDL_Texture* MinIMGView::loadTexture(std::string filename, Application &app) {
+SDL_Texture* MinIMGView::load_texture(std::string filename, Application &app) {
   return IMG_LoadTexture(app.renderer, filename.c_str());
 }
 

@@ -13,14 +13,16 @@ void MinIMGView::load_from_file(Application &app, std::string path) {
   std::string wd = get_wd(path);
   Image img;
   img.path = path;
-  img.x = 100;
-  img.y = 100;
+  img.x = 0;
+  img.y = 0;
 
   img.texture = loadTexture(img.path, app);
   img.dest.x = img.x;
   img.dest.y = img.y;
 
   SDL_QueryTexture(img.texture, nullptr, nullptr, &img.dest.w, &img.dest.h);
+  SDL_SetWindowSize(app.window, img.dest.w, img.dest.h);
+
   SDL_RenderCopy(app.renderer, img.texture, nullptr, &img.dest);
   SDL_RenderPresent(app.renderer);
 }

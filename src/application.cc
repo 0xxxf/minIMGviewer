@@ -15,68 +15,6 @@ void MinIMGView::clean_up(Application &app) {
   SDL_Quit();
 }
 
-void MinIMGView::render_image(Application &app, std::string path) {
-  /*if(app.renderer != nullptr) {
-    SDL_RenderClear(app.renderer);
-    SDL_DestroyRenderer(app.renderer);
-  }
-
-  std::string wd = get_wd(path);
-
-  SDL_Rect dest;
-  dest.x = 0;
-  dest.y = 0;
-
-  auto texture = load_texture(path, app);
- 
-  #define LOG(msg, val) std::cout << msg << " ====> " << val << "\n";
-  LOG("CURRENT IMG PATH", path);
-
-  SDL_QueryTexture(texture, nullptr, nullptr, &dest.w, &dest.h);
-
-  const int window_w = dest.w;
-  const int window_h = dest.h;
-
-  LOG("IMG.DEST.w", window_w);
-  LOG("IMG.DEST.h", window_h);
-
-  SDL_SetWindowSize(app.window, window_w, window_h);
-
-  app.renderer = SDL_CreateRenderer(app.window, -1, SDL_RENDERER_SOFTWARE);
-  texture = load_texture(path,app);
-
-  SDL_QueryTexture(texture, nullptr, nullptr, &dest.w, &dest.h);
-  SDL_RenderCopy(app.renderer, texture, nullptr, &dest);
-  SDL_RenderPresent(app.renderer);*/
-  if(app.renderer != nullptr)
-    SDL_DestroyRenderer(app.renderer);
-  app.renderer = SDL_CreateRenderer(app.window, -1, SDL_RENDERER_SOFTWARE);
-
-  std::string wd = get_wd(path);
-
-  Image img;
-  img.path = path;
-  img.x = 0;
-  img.y = 0;
-
-  img.texture = load_texture(img.path, app);
-  img.dest.x = img.x;
-  img.dest.y = img.y;
-
-  SDL_QueryTexture(img.texture, nullptr, nullptr, &img.dest.w, &img.dest.h);
-  SDL_SetWindowSize(app.window, img.dest.w, img.dest.h);
-
-  //app.renderer = SDL_CreateRenderer(app.window, -1, SDL_RENDERER_SOFTWARE);
-  //SDL_RenderClear(app.renderer);
-  //app.renderer = SDL_CreateRenderer(app.window, -1, SDL_RENDERER_ACCELERATED);
-
-  img.texture = load_texture(img.path,app);
-
-  //SDL_QueryTexture(img.texture,nullptr,nullptr, &img.dest.w, &img.dest.h);
-  SDL_RenderCopy(app.renderer, img.texture, nullptr, &img.dest);
-  SDL_RenderPresent(app.renderer);
-}
-
 MinIMGView::Image MinIMGView::create_image(std::string path) {
   Image img; 
   img.path = path;
@@ -129,8 +67,6 @@ void MinIMGView::run(Application &app, std::string path) {
       quit = true;
     if(ev.type == SDL_KEYDOWN) {
       if(current < (int) file_list.size()) {
-        //SDL_RenderClear(app.renderer);
-        //render_image(app, file_list.at(current));
         img = create_image(file_list.at(current));
         current++;
       } else {

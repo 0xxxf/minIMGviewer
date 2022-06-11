@@ -5,12 +5,16 @@ void MinIMGView::init_sdl(Application &app) {
   SDL_Init(SDL_INIT_VIDEO);
   IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
   app.window = SDL_CreateWindow("minimgview", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 800, 600, SDL_WINDOW_SHOWN);
-  app.renderer = SDL_CreateRenderer(app.window, -1 , SDL_RENDERER_ACCELERATED);
   printf("SDL Initialized");
 }
 
 void MinIMGView::render_image(Application &app, std::string path) {
+  if(app.renderer != nullptr)
+    SDL_DestroyRenderer(app.renderer);
+  app.renderer = SDL_CreateRenderer(app.window, -1, SDL_RENDERER_ACCELERATED);
+
   std::string wd = get_wd(path);
+
   Image img;
   img.path = path;
   img.x = 0;
@@ -79,6 +83,9 @@ std::vector<std::string> MinIMGView::load_from_wd(std::string dir) {
   for(const auto & entry : std::filesystem::directory_iterator(dir))
     if(entry.path().string().find(".PNG") != std::string::npos)
       files.push_back(entry.path().string());
+
+  for(const auto v : files)
+    std::cout << v << "\n";
 
   return files;
 }

@@ -32,7 +32,7 @@ struct ImageList {
 
 void init_sdl(Application &app);
 
-void load_from_file(Application &app, std::string path);
+void render_image(Application &app, std::string path);
 
 std::vector<std::string> load_from_wd(std::string dir);
 
@@ -40,7 +40,7 @@ void render(Application &app, Image &img);
 
 void run(Application &app, std::string path);
 
-SDL_Texture *loadTexture(std::string filename, Application &app);
+SDL_Texture *load_texture(std::string filename, Application &app);
 
 extern std::vector<Image> imageList;
 

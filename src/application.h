@@ -30,6 +30,8 @@ struct ImageList {
   int count = 0;
 };
 
+Image create_image(std::string path);
+
 void init_sdl(Application &app);
 
 void render_image(Application &app, std::string path);

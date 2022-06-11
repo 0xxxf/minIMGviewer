@@ -14,7 +14,6 @@ int main(int argc, char *argv[]) {
   #endif
 
   MinIMGView::Application app;
-  MinIMGView::Image img;
   MinIMGView::init_sdl(app);
   MinIMGView::run(app, argv[1]);
 

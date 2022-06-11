@@ -40,6 +40,8 @@ void render(Application &app, Image &img);
 
 void run(Application &app, std::string path);
 
+void clean_up(Application &app);
+
 SDL_Texture *load_texture(std::string filename, Application &app);
 
 extern std::vector<Image> imageList;

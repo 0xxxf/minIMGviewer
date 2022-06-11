@@ -8,6 +8,13 @@ void MinIMGView::init_sdl(Application &app) {
   printf("SDL Initialized");
 }
 
+void MinIMGView::clean_up(Application &app) {
+  SDL_DestroyRenderer(app.renderer);
+  SDL_DestroyWindow(app.window);
+  IMG_Quit();
+  SDL_Quit();
+}
+
 void MinIMGView::render_image(Application &app, std::string path) {
   if(app.renderer != nullptr)
     SDL_DestroyRenderer(app.renderer);
@@ -73,6 +80,7 @@ void MinIMGView::run(Application &app, std::string path) {
       }
     }
   }
+  clean_up(app);
 }
 
 std::vector<std::string> MinIMGView::load_from_wd(std::string dir) {
@@ -83,9 +91,6 @@ std::vector<std::string> MinIMGView::load_from_wd(std::string dir) {
   for(const auto & entry : std::filesystem::directory_iterator(dir))
     if(entry.path().string().find(".PNG") != std::string::npos)
       files.push_back(entry.path().string());
-
-  for(const auto v : files)
-    std::cout << v << "\n";
 
   return files;
 }

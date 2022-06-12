@@ -17,37 +17,42 @@ struct Application {
 };
 
 struct Image {
+  /* This could be a Class, however it's fine for now */
   unsigned int x;
   unsigned int y;
-
+  
+  /* mod flag allows the struct to always store the original SDL_Rect width and height
+   * this should be set to true whenever any of the original values get changed
+   */
+  bool mod = false;
   std::string path;
+
+  /* Each image should carry a texture in order to be rendered*/
   SDL_Texture *texture;
   SDL_Rect dest;
+  SDL_Rect original_val;
 };
 
-struct ImageList {
-  std::vector<Image> list = {};
-  int count = 0;
-};
-
+/* This kind of works like a constructor, maybe think of a better solution or directly convert Image to a class,
+   altought this creates some additional complexity that doesn't need to be there.*/
 Image create_image(std::string path);
 
 void init_sdl(Application &app);
 
-void render_image(Application &app, std::string path);
-
+/* Returns a vector of string with all the current image paths in the working directory. TODO: change the function name, it's bad. */
 std::vector<std::string> load_from_wd(std::string dir);
 
 void render(Application &app, Image &img);
 
 void run(Application &app, std::string path);
-
 void clean_up(Application &app);
+
+void zoom_in(Image &img);
+void zoom_out(Image &img);
 
 SDL_Texture *load_texture(std::string filename, Application &app);
 
-extern std::vector<Image> imageList;
-
+/* Gets the current working directory from a filepath */
 std::string get_wd(std::string path);
 
 }

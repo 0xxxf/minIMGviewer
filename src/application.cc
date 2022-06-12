@@ -38,16 +38,14 @@ void MinIMGView::render(Application &app, Image &img) {
  
   /* 
     This may look "hacky", but i think it's perfectly fine, however i'll think of a better solution.
-
     An image will never be modified on it's first load, so we are fine to assume SDL_QueryTexture will be called on each
     image load, and the origin SDL_Rect data will be stored in original_val (we store this so we can render to the same window size when modifying the image).
   */
-  if(!img.mod)
-    SDL_QueryTexture(img.texture, nullptr, nullptr, &img.dest.w, &img.dest.h);
 
   if(img.mod) {
     SDL_SetWindowSize(app.window, img.original_val.w, img.original_val.h);
   } else {
+    SDL_QueryTexture(img.texture, nullptr, nullptr, &img.dest.w, &img.dest.h);
     SDL_SetWindowSize(app.window, img.dest.w, img.dest.h);
     img.original_val = img.dest;
   }
@@ -57,18 +55,19 @@ void MinIMGView::render(Application &app, Image &img) {
 }
 
 
-void MinIMGView::zoom_in(Image &img, int x, int y) {
+constexpr void MinIMGView::zoom_in(Image &img, int x, int y) {
   img.mod = true;
-  img.dest.x = x - (img.dest.w * 1.5 - img.dest.w) / 2;
-  img.dest.y = y - (img.dest.h * 1.5 - img.dest.h) / 2;        
+  img.dest.x = x - (img.dest.w * 2 - img.dest.w) / 2;
+  img.dest.y = y - (img.dest.h * 2 - img.dest.h) / 2;        
   img.dest.w *= 1.2f;
   img.dest.h *= 1.2f;
 }
 
-void MinIMGView::zoom_out(Image &img, int x, int y) {
+constexpr void MinIMGView::zoom_out(Image &img, int x, int y) {
   img.mod = true;
-  img.dest.x = x - (img.dest.w * 1.5 - img.dest.w) / 2;
-  img.dest.y = y - (img.dest.h * 1.5 - img.dest.h) / 2;        
+  //TODO: this calculation doesn't work correctly
+  img.dest.x = x - (img.dest.w * 2 - img.dest.w) / 2;
+  img.dest.y = y - (img.dest.h * 2 - img.dest.h) / 2;        
   img.dest.w /= 1.2f;
   img.dest.h /= 1.2f;
 }
@@ -76,6 +75,7 @@ void MinIMGView::zoom_out(Image &img, int x, int y) {
 void MinIMGView::run(Application &app, std::string path) {
   SDL_Event ev;
   int current = 0;
+  int mouse_x, mouse_y;
   bool quit = false;
 
   std::string wd;
@@ -96,7 +96,6 @@ void MinIMGView::run(Application &app, std::string path) {
   }
 
   render(app, img);
-  int mouse_x, mouse_y;
 
   while(!quit) {
   while(SDL_PollEvent(&ev)) {
@@ -105,13 +104,21 @@ void MinIMGView::run(Application &app, std::string path) {
     if(ev.type == SDL_KEYDOWN) {
       switch(ev.key.keysym.sym) {
         case SDLK_RIGHT:
-          if(current < (int) file_list.size()) {
-            img = create_image(file_list.at(current));
+          if(current < (int)file_list.size()) {
             current++;
+            if(current == (int)file_list.size() -1)
+              current = 0;
+            img = create_image(file_list.at(current));
           } else {
             current = 0;
             SDL_RenderClear(app.renderer);
           }
+          break;
+        case SDLK_LEFT:
+          if(current == 0)
+            current = (int)file_list.size() - 1;
+          current--;
+          img = create_image(file_list.at(current));
           break;
         case SDLK_z:
           SDL_GetMouseState(&mouse_x, &mouse_y);

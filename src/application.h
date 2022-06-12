@@ -29,6 +29,7 @@ struct Image {
 
   /* Each image should carry a texture in order to be rendered*/
   SDL_Texture *texture;
+  /* Use this SDL_Rect as a surface for rendering the image, keep a copy in original_val in case we want to go back to the original state */
   SDL_Rect dest;
   SDL_Rect original_val;
 };
@@ -47,8 +48,8 @@ void render(Application &app, Image &img);
 void run(Application &app, std::string path);
 void clean_up(Application &app);
 
-void zoom_in(Image &img, int x, int y);
-void zoom_out(Image &img, int x, int y);
+constexpr void zoom_in(Image &img, int x, int y);
+constexpr void zoom_out(Image &img, int x, int y);
 
 SDL_Texture *load_texture(std::string filename, Application &app);
 

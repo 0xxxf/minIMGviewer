@@ -47,8 +47,8 @@ void render(Application &app, Image &img);
 void run(Application &app, std::string path);
 void clean_up(Application &app);
 
-void zoom_in(Image &img);
-void zoom_out(Image &img);
+void zoom_in(Image &img, int x, int y);
+void zoom_out(Image &img, int x, int y);
 
 SDL_Texture *load_texture(std::string filename, Application &app);
 

@@ -57,17 +57,18 @@ void MinIMGView::render(Application &app, Image &img) {
 }
 
 
-/* These two methods zoom in or out, however, they do it from a fixed x,y position (0,0).
- * TODO: This should changed for x and y to be relative to the current mouse position.
- */
-void MinIMGView::zoom_in(Image &img) {
+void MinIMGView::zoom_in(Image &img, int x, int y) {
   img.mod = true;
+  img.dest.x = x - (img.dest.w * 1.5 - img.dest.w) / 2;
+  img.dest.y = y - (img.dest.h * 1.5 - img.dest.h) / 2;        
   img.dest.w *= 1.2f;
   img.dest.h *= 1.2f;
 }
 
-void MinIMGView::zoom_out(Image &img) {
+void MinIMGView::zoom_out(Image &img, int x, int y) {
   img.mod = true;
+  img.dest.x = x - (img.dest.w * 1.5 - img.dest.w) / 2;
+  img.dest.y = y - (img.dest.h * 1.5 - img.dest.h) / 2;        
   img.dest.w /= 1.2f;
   img.dest.h /= 1.2f;
 }
@@ -95,6 +96,7 @@ void MinIMGView::run(Application &app, std::string path) {
   }
 
   render(app, img);
+  int mouse_x, mouse_y;
 
   while(!quit) {
   while(SDL_PollEvent(&ev)) {
@@ -112,13 +114,17 @@ void MinIMGView::run(Application &app, std::string path) {
           }
           break;
         case SDLK_z:
-          zoom_in(img);
+          SDL_GetMouseState(&mouse_x, &mouse_y);
+          zoom_in(img, mouse_x, mouse_y);
           break;
         case SDLK_x:
-          zoom_out(img);
+          SDL_GetMouseState(&mouse_x, &mouse_y);
+          zoom_out(img, mouse_x, mouse_y);
           break;
         case SDLK_r:
           img.mod = false;
+          img.dest.x = 0;
+          img.dest.y = 0;
           break;
         case SDLK_q:
           quit = true;

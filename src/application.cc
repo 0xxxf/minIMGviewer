@@ -89,13 +89,20 @@ void MinIMGView::run(Application &app, std::string path) {
     img = create_image(path);
     wd = get_wd(path);
     file_list = load_from_wd(wd);
+
   } else {
     file_list = load_from_wd(path);
-    img = create_image(file_list.at(0));
+    if(!file_list.empty())
+      img = create_image(file_list.at(0));
     current++;
   }
 
-  render(app, img);
+  if(file_list.empty()) {
+    quit = true;
+    printf("Provided directory doesn't contain any images, exitting.\n");
+  }
+  else
+    render(app, img);
 
   while(!quit) {
   while(SDL_PollEvent(&ev)) {

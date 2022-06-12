@@ -6,6 +6,6 @@ Controls:
 
 
 - Right/Left key for switching images.
-- Z/X for zomming in/out.
+- Z/X for zooming in/out.
 - R for resetting the image size.
-- Q for quit.
+- Q for quitting the program.

@@ -146,7 +146,6 @@ void MinIMGView::run(Application &app, std::string path) {
 
 std::vector<std::string> MinIMGView::load_from_wd(std::string dir) {
   std::vector<std::string> files;
-	std::string file_aux;
   /* filesystem is really heavy on compile times (i haven't looked into it) 
    * maybe rewrite this function without using it. Leaving it for now as it works.
   */

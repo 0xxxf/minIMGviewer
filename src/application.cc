@@ -3,9 +3,19 @@
 
 void MinIMGView::init_sdl(Application &app) {
   //TODO: error checking
-  SDL_Init(SDL_INIT_VIDEO);
-  IMG_Init(IMG_INIT_PNG);
+  if(SDL_Init(SDL_INIT_VIDEO) < 0 ) {
+    printf("Couldnt initialize SDL, Error: %s\n",SDL_GetError());
+    app.quit = true;
+  }
+  if(IMG_Init(IMG_INIT_PNG) <0 ) {
+    printf("Couldnt initialize SDL_Image, Error: %s\n", SDL_GetError());
+    app.quit = true;
+  } 
   app.window = SDL_CreateWindow("minimgview", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1600, 900, SDL_WINDOW_RESIZABLE);
+  if(app.window == nullptr) {
+    printf("Window couldn't be created, Error: %s\n", SDL_GetError());
+    app.quit = true;
+  }
   app.renderer = SDL_CreateRenderer(app.window, -1, SDL_RENDERER_ACCELERATED);
 }
 
@@ -76,7 +86,6 @@ void MinIMGView::run(Application &app, std::string path) {
   SDL_Event ev;
   int current = 0;
   int mouse_x, mouse_y;
-  bool quit = false;
 
   std::string wd;
   std::vector<std::string> file_list;
@@ -84,12 +93,12 @@ void MinIMGView::run(Application &app, std::string path) {
 
   /* If we receive a file as an argument, create an image from it and get the rest of the files in that directory,
    * however if we receive a folder, get all the files from the folder and render the first one.
-   */
+   * Think of a cleaner way to do this */
+
   if(is_file(path)) {
     img = create_image(path);
     wd = get_wd(path);
     file_list = load_all(wd);
-
   } else {
     file_list = load_all(path);
     if(!file_list.empty())
@@ -98,18 +107,19 @@ void MinIMGView::run(Application &app, std::string path) {
   }
 
   if(file_list.empty()) {
-    quit = true;
+    app.quit = true;
     printf("Provided directory doesn't contain any images, exitting.\n");
   }
-  else 
+  if(!app.quit)
     render(app, img);
 
-  while(!quit) {
+  while(!app.quit) {
   while(SDL_PollEvent(&ev)) {
     if(ev.type == SDL_QUIT)
-      quit = true;
+      app.quit = true;
     if(ev.type == SDL_KEYDOWN) {
       switch(ev.key.keysym.sym) {
+        // Replace those two (SDLK_RIGHT and SDLK_LEFT), can be handled by the same function.
         case SDLK_RIGHT:
           if(current < (int)file_list.size()) {
             current++;
@@ -141,7 +151,7 @@ void MinIMGView::run(Application &app, std::string path) {
           img.dest.y = 0;
           break;
         case SDLK_q:
-          quit = true;
+          app.quit = true;
           break;
       }
     }
@@ -154,3 +164,4 @@ void MinIMGView::run(Application &app, std::string path) {
 SDL_Texture* MinIMGView::load_texture(std::string filename, Application &app) {
   return IMG_LoadTexture(app.renderer, filename.c_str());
 }
+

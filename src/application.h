@@ -14,6 +14,8 @@ struct Application {
   SDL_Renderer *renderer = nullptr;
   SDL_Window *window = nullptr;
   SDL_Surface *surface = nullptr;
+
+  bool quit = false;
 };
 
 struct Image {

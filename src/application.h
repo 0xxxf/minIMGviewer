@@ -40,9 +40,6 @@ Image create_image(std::string path);
 
 void init_sdl(Application &app);
 
-/* Returns a vector of string with all the current image paths in the working directory. TODO: change the function name, it's bad. */
-std::vector<std::string> load_from_wd(std::string dir);
-
 void render(Application &app, Image &img);
 
 void run(Application &app, std::string path);
@@ -52,9 +49,6 @@ constexpr void zoom_in(Image &img, int x, int y);
 constexpr void zoom_out(Image &img, int x, int y);
 
 SDL_Texture *load_texture(std::string filename, Application &app);
-
-/* Gets the current working directory from a filepath */
-std::string get_wd(std::string path);
 
 }
 #endif

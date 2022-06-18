@@ -1,4 +1,5 @@
 #include "application.h"
+#include "file_util.h"
 
 void MinIMGView::init_sdl(Application &app) {
   //TODO: error checking
@@ -54,13 +55,12 @@ void MinIMGView::render(Application &app, Image &img) {
   SDL_RenderPresent(app.renderer);
 }
 
-
 constexpr void MinIMGView::zoom_in(Image &img, int x, int y) {
   img.mod = true;
   img.dest.x = x - (img.dest.w * 2 - img.dest.w) / 2;
   img.dest.y = y - (img.dest.h * 2 - img.dest.h) / 2;        
-  img.dest.w *= 1.2f;
-  img.dest.h *= 1.2f;
+  img.dest.w *= 2;
+  img.dest.h *= 2;
 }
 
 constexpr void MinIMGView::zoom_out(Image &img, int x, int y) {
@@ -68,8 +68,8 @@ constexpr void MinIMGView::zoom_out(Image &img, int x, int y) {
   //TODO: this calculation doesn't work correctly
   img.dest.x = x - (img.dest.w * 2 - img.dest.w) / 2;
   img.dest.y = y - (img.dest.h * 2 - img.dest.h) / 2;        
-  img.dest.w /= 1.2f;
-  img.dest.h /= 1.2f;
+  img.dest.w /= 2;
+  img.dest.h /= 2;
 }
 
 void MinIMGView::run(Application &app, std::string path) {
@@ -85,13 +85,13 @@ void MinIMGView::run(Application &app, std::string path) {
   /* If we receive a file as an argument, create an image from it and get the rest of the files in that directory,
    * however if we receive a folder, get all the files from the folder and render the first one.
    */
-  if(path.find(".") != std::string::npos) {
+  if(is_file(path)) {
     img = create_image(path);
     wd = get_wd(path);
-    file_list = load_from_wd(wd);
+    file_list = load_all(wd);
 
   } else {
-    file_list = load_from_wd(path);
+    file_list = load_all(path);
     if(!file_list.empty())
       img = create_image(file_list.at(0));
     current++;
@@ -101,7 +101,7 @@ void MinIMGView::run(Application &app, std::string path) {
     quit = true;
     printf("Provided directory doesn't contain any images, exitting.\n");
   }
-  else
+  else 
     render(app, img);
 
   while(!quit) {
@@ -151,23 +151,6 @@ void MinIMGView::run(Application &app, std::string path) {
   clean_up(app);
 }
 
-std::vector<std::string> MinIMGView::load_from_wd(std::string dir) {
-  std::vector<std::string> files;
-  /* filesystem is really heavy on compile times (i haven't looked into it) 
-   * maybe rewrite this function without using it. Leaving it for now as it works.
-  */
-  for(const auto & entry : std::filesystem::directory_iterator(dir))
-    if(entry.path().string().find(".PNG") != std::string::npos)
-      files.push_back(entry.path().string());
-
-  return files;
-}
-
 SDL_Texture* MinIMGView::load_texture(std::string filename, Application &app) {
   return IMG_LoadTexture(app.renderer, filename.c_str());
-}
-
-std::string MinIMGView::get_wd(std::string path) {
-  auto found = path.find_last_of("/\\");
-  return(path.substr(0, found));
 }

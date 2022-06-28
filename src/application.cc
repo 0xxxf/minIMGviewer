@@ -108,7 +108,6 @@ void miv::run(Application &app, std::string path) {
     printf("Provided directory doesn't contain any images, exitting.\n");
   }
 	
-
   // Current soluntion i've implemented is to allocate all the needed memory for a provided
   // directory, this results in the program running faster, but our memory consumption is bigger.
   // Maybe change it to have an initial memory load, and increase it if needed, for eg:
@@ -137,7 +136,6 @@ void miv::run(Application &app, std::string path) {
             current++;
             if(current == (int)file_list.size() -1)
               current = 0;
-            //img = create_image(file_list.at(current));
           } else {
             current = 0;
             SDL_RenderClear(app.renderer);
@@ -147,20 +145,20 @@ void miv::run(Application &app, std::string path) {
           if(current == 0)
             current = (int)file_list.size() - 1;
           current--;
-          //img = create_image(file_list.at(current));
           break;
         case SDLK_z:
           SDL_GetMouseState(&mouse_x, &mouse_y);
-          zoom_in(img, mouse_x, mouse_y);
+          zoom_in(texture_map[current].image, mouse_x, mouse_y);
           break;
         case SDLK_x:
+	  // Broke after last refactor
           SDL_GetMouseState(&mouse_x, &mouse_y);
-          zoom_out(img, mouse_x, mouse_y);
+          zoom_out(texture_map[current].image, mouse_x, mouse_y);
           break;
         case SDLK_r:
-          img.mod = false;
-          img.dest.x = 0;
-          img.dest.y = 0;
+          texture_map[current].image.mod = false;
+          texture_map[current].image.dest.x = 0;
+          texture_map[current].image.dest.y = 0;
           break;
         case SDLK_q:
           app.quit = true;

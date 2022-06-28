@@ -1,7 +1,7 @@
 #include "application.h"
 #include "file_util.h"
 
-void MinIMGView::init_sdl(Application &app) {
+void miv::init_sdl(Application &app) {
   //TODO: error checking
   if(SDL_Init(SDL_INIT_VIDEO) < 0 ) {
     printf("Couldnt initialize SDL, Error: %s\n",SDL_GetError());
@@ -19,14 +19,14 @@ void MinIMGView::init_sdl(Application &app) {
   app.renderer = SDL_CreateRenderer(app.window, -1, SDL_RENDERER_ACCELERATED);
 }
 
-void MinIMGView::clean_up(Application &app) {
+void miv::clean_up(Application &app) {
   SDL_DestroyRenderer(app.renderer);
   SDL_DestroyWindow(app.window);
   IMG_Quit();
   SDL_Quit();
 }
 
-MinIMGView::Image MinIMGView::create_image(std::string path) {
+miv::Image miv::create_image(std::string path) {
   /* @Refactor Although i made this struct when i started to write the program, it may be cleaner without using it and directly rendering files
    * from a given path.
    */
@@ -39,33 +39,26 @@ MinIMGView::Image MinIMGView::create_image(std::string path) {
   return img;
 }
 
-void MinIMGView::render(Application &app, Image &img) {
-  /* This is here to avoid memory leaking when skipping images */
-  if(app.renderer != nullptr)
-    SDL_DestroyRenderer(app.renderer);
-  
-  app.renderer = SDL_CreateRenderer(app.window, -1, SDL_RENDERER_ACCELERATED);
-  img.texture = load_texture(img.path, app);
- 
+void miv::render(Application &app, TextureImageMap &img) {
   /* 
     This may look "hacky", but i think it's perfectly fine, however i'll think of a better solution.
     An image will never be modified on it's first load, so we are fine to assume SDL_QueryTexture will be called on each
     image load, and the origin SDL_Rect data will be stored in original_val (we store this so we can render to the same window size when modifying the image).
   */
 
-  if(img.mod) {
-    SDL_SetWindowSize(app.window, img.original_val.w, img.original_val.h);
+  if(img.image.mod) {
+    SDL_SetWindowSize(app.window, img.image.original_val.w, img.image.original_val.h);
   } else {
-    SDL_QueryTexture(img.texture, nullptr, nullptr, &img.dest.w, &img.dest.h);
-    SDL_SetWindowSize(app.window, img.dest.w, img.dest.h);
-    img.original_val = img.dest;
+    SDL_QueryTexture(img.texture, nullptr, nullptr, &img.image.dest.w, &img.image.dest.h);
+    SDL_SetWindowSize(app.window, img.image.dest.w, img.image.dest.h);
+    img.image.original_val = img.image.dest;
   }
 
-  SDL_RenderCopy(app.renderer, img.texture, nullptr, &img.dest);
+  SDL_RenderCopy(app.renderer, img.texture, nullptr, &img.image.dest);
   SDL_RenderPresent(app.renderer);
 }
 
-constexpr void MinIMGView::zoom_in(Image &img, int x, int y) {
+constexpr void miv::zoom_in(Image &img, int x, int y) {
   img.mod = true;
   img.dest.x = x - (img.dest.w * 2 - img.dest.w) / 2;
   img.dest.y = y - (img.dest.h * 2 - img.dest.h) / 2;        
@@ -73,7 +66,7 @@ constexpr void MinIMGView::zoom_in(Image &img, int x, int y) {
   img.dest.h *= 2;
 }
 
-constexpr void MinIMGView::zoom_out(Image &img, int x, int y) {
+constexpr void miv::zoom_out(Image &img, int x, int y) {
   img.mod = true;
   //TODO: this calculation doesn't work correctly
   img.dest.x = x - (img.dest.w * 2 - img.dest.w) / 2;
@@ -82,7 +75,7 @@ constexpr void MinIMGView::zoom_out(Image &img, int x, int y) {
   img.dest.h /= 2;
 }
 
-void MinIMGView::run(Application &app, std::string path) {
+void miv::run(Application &app, std::string path) {
   SDL_Event ev;
   int current = 0;
   int mouse_x, mouse_y;
@@ -106,12 +99,31 @@ void MinIMGView::run(Application &app, std::string path) {
     current++;
   }
 
+  TextureImageMap placeholder; 
+  placeholder.image = img;
+  placeholder.texture = load_texture(img.path, app);
+
   if(file_list.empty()) {
     app.quit = true;
     printf("Provided directory doesn't contain any images, exitting.\n");
   }
-  if(!app.quit)
-    render(app, img);
+	
+
+  // Current soluntion i've implemented is to allocate all the needed memory for a provided
+  // directory, this results in the program running faster, but our memory consumption is bigger.
+  // Maybe change it to have an initial memory load, and increase it if needed, for eg:
+  //
+  // #define BLOCK_SIZE 25MB
+  // Check if enough for next image => Ask for another block if needed
+  TextureImageMap texture_map[file_list.size()];
+  for(size_t i = 0; i < file_list.size(); i++) {
+    std::string curr_file = file_list.at(i);
+    auto image = create_image(curr_file);
+    SDL_Texture *texture = load_texture(curr_file, app);
+    texture_map[i].texture = texture;
+    texture_map[i].image = image;
+    std::cout << "Loaded file" << file_list[i] << "\n";
+  }
 
   while(!app.quit) {
   while(SDL_PollEvent(&ev)) {
@@ -125,7 +137,7 @@ void MinIMGView::run(Application &app, std::string path) {
             current++;
             if(current == (int)file_list.size() -1)
               current = 0;
-            img = create_image(file_list.at(current));
+            //img = create_image(file_list.at(current));
           } else {
             current = 0;
             SDL_RenderClear(app.renderer);
@@ -135,7 +147,7 @@ void MinIMGView::run(Application &app, std::string path) {
           if(current == 0)
             current = (int)file_list.size() - 1;
           current--;
-          img = create_image(file_list.at(current));
+          //img = create_image(file_list.at(current));
           break;
         case SDLK_z:
           SDL_GetMouseState(&mouse_x, &mouse_y);
@@ -156,12 +168,15 @@ void MinIMGView::run(Application &app, std::string path) {
       }
     }
   }
-  render(app, img);
+  render(app, texture_map[current]);
   }
   clean_up(app);
 }
 
-SDL_Texture* MinIMGView::load_texture(std::string filename, Application &app) {
+SDL_Texture* miv::load_texture(std::string filename, Application &app) {
   return IMG_LoadTexture(app.renderer, filename.c_str());
 }
 
+miv::TextureImageMap miv::generate_texture_map() {
+  
+}

@@ -8,7 +8,7 @@
 #include <filesystem>
 #include <iostream>
 
-namespace MinIMGView {
+namespace miv {
 
 struct Application {
   SDL_Renderer *renderer = nullptr;
@@ -36,13 +36,20 @@ struct Image {
   SDL_Rect original_val;
 };
 
+struct TextureImageMap {
+  SDL_Texture *texture;
+  Image image;
+};
+
+struct TextureImageMap generate_texture_map(); 
+
 /* This kind of works like a constructor, maybe think of a better solution or directly convert Image to a class,
    altought this creates some additional complexity that doesn't need to be there.*/
 Image create_image(std::string path);
 
 void init_sdl(Application &app);
 
-void render(Application &app, Image &img);
+void render(Application &app, TextureImageMap &img);
 
 void run(Application &app, std::string path);
 void clean_up(Application &app);

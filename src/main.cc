@@ -21,9 +21,9 @@ int main(int argc, char *argv[]) {
   struct stat info;
 
   if(stat(argv[1], &info) == 0) {
-    MinIMGView::Application app;
-    MinIMGView::init_sdl(app);
-    MinIMGView::run(app, argv[1]); 
+    miv::Application app;
+    miv::init_sdl(app);
+    miv::run(app, argv[1]); 
   }
   else {
     printf("Error: Invalid directory/file path provided, exitting.");

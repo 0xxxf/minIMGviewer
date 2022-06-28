@@ -5,7 +5,7 @@
 #include <string>
 #include <filesystem>
 
-namespace MinIMGView {
+namespace miv {
   std::string get_wd(std::string path);
 
   bool is_file(std::string path);

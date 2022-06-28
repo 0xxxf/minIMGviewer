@@ -166,6 +166,7 @@ void miv::run(Application &app, std::string path) {
       }
     }
   }
+  SDL_RenderClear(app.renderer);
   render(app, texture_map[current]);
   }
   clean_up(app);

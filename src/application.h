@@ -31,6 +31,7 @@ struct Image {
 
   /* Each image should carry a texture in order to be rendered*/
   SDL_Texture *texture;
+
   /* Use this SDL_Rect as a surface for rendering the image, keep a copy in original_val in case we want to go back to the original state */
   SDL_Rect dest;
   SDL_Rect original_val;
@@ -47,7 +48,7 @@ struct TextureImageMap generate_texture_map();
    altought this creates some additional complexity that doesn't need to be there.*/
 Image create_image(std::string path);
 
-void init_sdl(Application &app);
+void init_sdl(Application &app, bool trace);
 
 void render(Application &app, TextureImageMap &img);
 
@@ -58,6 +59,8 @@ constexpr void zoom_in(Image &img, int x, int y);
 constexpr void zoom_out(Image &img, int x, int y);
 
 SDL_Texture *load_texture(std::string filename, Application &app);
+
+void allocate_memory(size_t current_file_index, size_t batch, TextureImageMap *texture_map, std::vector<std::string> &file_list, Application &app);
 
 }
 #endif

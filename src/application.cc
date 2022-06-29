@@ -1,8 +1,9 @@
 #include "application.h"
 #include "file_util.h"
 
-void miv::init_sdl(Application &app) {
-  //TODO: error checking
+void miv::init_sdl(Application &app, bool trace) {
+  if(trace)
+    #define _TRACEMODE
   if(SDL_Init(SDL_INIT_VIDEO) < 0 ) {
     printf("Couldnt initialize SDL, Error: %s\n",SDL_GetError());
     app.quit = true;
@@ -68,7 +69,7 @@ constexpr void miv::zoom_in(Image &img, int x, int y) {
 
 constexpr void miv::zoom_out(Image &img, int x, int y) {
   img.mod = true;
-  //TODO: this calculation doesn't work correctly
+  //TODO: this calculation doesn't work correctly (im bad at math lol)
   img.dest.x = x - (img.dest.w * 2 - img.dest.w) / 2;
   img.dest.y = y - (img.dest.h * 2 - img.dest.h) / 2;        
   img.dest.w /= 2;
@@ -115,22 +116,37 @@ void miv::run(Application &app, std::string path) {
   // #define BLOCK_SIZE 25MB
   // Check if enough for next image => Ask for another block if needed
   TextureImageMap texture_map[file_list.size()];
-  for(size_t i = 0; i < file_list.size(); i++) {
+  size_t dir_size = file_list.size();
+
+  // Load memory in chuncks of 5 files
+  size_t batch = 5;
+  size_t current_file_index = 0;
+  if(dir_size <= batch)
+	  batch = dir_size;
+
+  allocate_memory(current_file_index, batch, texture_map, file_list, app);
+/*
+  for(size_t i = current_file_index; i < batch; i++) {
     std::string curr_file = file_list.at(i);
     auto image = create_image(curr_file);
     SDL_Texture *texture = load_texture(curr_file, app);
     texture_map[i].texture = texture;
     texture_map[i].image = image;
-    std::cout << "Loaded file" << file_list[i] << "\n";
+    #ifdef _TRACEMODE
+    	std::cout << "Loaded file" << file_list[i] << "\n";
+    #endif
   }
 
+  */
+
+  current_file_index += batch; 
   while(!app.quit) {
   while(SDL_PollEvent(&ev)) {
     if(ev.type == SDL_QUIT)
       app.quit = true;
     if(ev.type == SDL_KEYDOWN) {
       switch(ev.key.keysym.sym) {
-        // Replace those two (SDLK_RIGHT and SDLK_LEFT), can be handled by the same function.
+        // Replace those two (SDLK_RIGHT and SDLK_LEFT), can be handled by the same function (can they?). 
         case SDLK_RIGHT:
           if(current < (int)file_list.size()) {
             current++;
@@ -140,6 +156,11 @@ void miv::run(Application &app, std::string path) {
             current = 0;
             SDL_RenderClear(app.renderer);
           }
+	  /* FIXME: This obviously doesn't work correctly when going back*/
+	  if(current % 5 == 0) {
+	    allocate_memory(current, batch, texture_map, file_list, app);
+	    printf("Current index: %i", current); 
+	  }
           break;
         case SDLK_LEFT:
           if(current == 0)
@@ -151,15 +172,16 @@ void miv::run(Application &app, std::string path) {
           zoom_in(texture_map[current].image, mouse_x, mouse_y);
           break;
         case SDLK_x:
-	  // Broke after last refactor
           SDL_GetMouseState(&mouse_x, &mouse_y);
           zoom_out(texture_map[current].image, mouse_x, mouse_y);
           break;
         case SDLK_r:
+	  //Reset to original values
+	  //Setting the modified flag to false creates some weird design approach, can we trust it?
           texture_map[current].image.mod = false;
           texture_map[current].image.dest.x = 0;
           texture_map[current].image.dest.y = 0;
-          break;
+	  break;
         case SDLK_q:
           app.quit = true;
           break;
@@ -178,4 +200,26 @@ SDL_Texture* miv::load_texture(std::string filename, Application &app) {
 
 miv::TextureImageMap miv::generate_texture_map() {
   
+}
+
+void miv::allocate_memory(size_t current_file_index, size_t batch, TextureImageMap *texture_map, std::vector<std::string> &file_list, Application &app) {
+  #ifdef _TRACEMODE
+	std::cout << "miv::alocate_memory() => Loading into index => " << current_file_index << "\n";
+  #endif
+  size_t target_batch;
+  if((current_file_index + batch) > file_list.size()) {
+    target_batch = file_list.size() - (file_list.size() - current_file_index);
+  } else {
+    target_batch = current_file_index + batch;
+  }
+  for(size_t i = current_file_index; i < target_batch; i++) {
+    std::string curr_file = file_list.at(i);
+    auto image = create_image(curr_file);
+    SDL_Texture *texture = load_texture(curr_file, app);
+    texture_map[i].texture = texture;
+    texture_map[i].image = image;
+    #ifdef _TRACEMODE
+    	std::cout << "Loaded file" << file_list[i] << "\n";
+    #endif
+  }
 }

@@ -18,11 +18,12 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
+  bool trace_mode = true;
   struct stat info;
 
   if(stat(argv[1], &info) == 0) {
     miv::Application app;
-    miv::init_sdl(app);
+    miv::init_sdl(app, trace_mode);
     miv::run(app, argv[1]); 
   }
   else {

@@ -3,10 +3,11 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
-#include <string>
-#include <vector>
 #include <filesystem>
 #include <iostream>
+#include <string>
+#include <vector>
+
 
 namespace miv {
 
@@ -22,9 +23,10 @@ struct Image {
   /* This could be a Class, however it's fine for now */
   unsigned int x;
   unsigned int y;
-  
-  /* mod flag allows the struct to always store the original SDL_Rect width and height
-   * this should be set to true whenever any of the original values get changed
+
+  /* mod flag allows the struct to always store the original SDL_Rect width and
+   * height this should be set to true whenever any of the original values get
+   * changed
    */
   bool mod = false;
   std::string path;
@@ -32,7 +34,8 @@ struct Image {
   /* Each image should carry a texture in order to be rendered*/
   SDL_Texture *texture;
 
-  /* Use this SDL_Rect as a surface for rendering the image, keep a copy in original_val in case we want to go back to the original state */
+  /* Use this SDL_Rect as a surface for rendering the image, keep a copy in
+   * original_val in case we want to go back to the original state */
   SDL_Rect dest;
   SDL_Rect original_val;
 };
@@ -42,10 +45,11 @@ struct TextureImageMap {
   Image image;
 };
 
-struct TextureImageMap generate_texture_map(); 
+struct TextureImageMap generate_texture_map();
 
-/* This kind of works like a constructor, maybe think of a better solution or directly convert Image to a class,
-   altought this creates some additional complexity that doesn't need to be there.*/
+/* This kind of works like a constructor, maybe think of a better solution or
+   directly convert Image to a class, altought this creates some additional
+   complexity that doesn't need to be there.*/
 Image create_image(std::string path);
 
 void init_sdl(Application &app, bool trace);
@@ -60,7 +64,10 @@ constexpr void zoom_out(Image &img, int x, int y);
 
 SDL_Texture *load_texture(std::string filename, Application &app);
 
-void allocate_memory(size_t current_file_index, size_t batch, TextureImageMap *texture_map, std::vector<std::string> &file_list, Application &app);
+void allocate_memory(size_t current_file_index, size_t batch,
+                     TextureImageMap *texture_map,
+                     std::vector<std::string> &file_list, Application &app);
 
-}
+void deallocate_memory(size_t start, size_t end, TextureImageMap *texture_map);
+} // namespace miv
 #endif

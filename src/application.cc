@@ -113,7 +113,6 @@ void miv::run(Application &app, std::string path) {
   }
   //TextureImageMap texture_map[file_list.size()];
   TextureImageMap *texture_map = new TextureImageMap[file_list.size()];
-
   size_t dir_size = file_list.size();
 
   // Load memory in chuncks of 5 files
@@ -143,10 +142,11 @@ void miv::run(Application &app, std::string path) {
             current = 0;
             SDL_RenderClear(app.renderer);
           }
-
           /* WILD STUFF HERE */ if (current % 5 == 0) {
-            allocate_memory(current, batch, texture_map, file_list, app);
-            deallocate_memory(current - batch, batch, texture_map);
+            if(!check_alloc(texture_map, current)) {
+              allocate_memory(current, batch, texture_map, file_list, app);
+              deallocate_memory(current - batch, batch, texture_map);
+            }
             printf("Current index: %i", current);
           }
           break;
@@ -230,5 +230,14 @@ void miv::deallocate_memory(size_t start, size_t end,
   for (size_t current = start; current < end; current++) {
     std::cout << "Destroying texture at map index:" << current << "\n";
     SDL_DestroyTexture(texture_map[current].texture);
+    texture_map[current].texture = nullptr;
+    std::cout << "Size: " << sizeof(texture_map[current]) << "\n";
   }
+} 
+
+bool miv::check_alloc(TextureImageMap *texture_map, size_t pos) {
+  if(texture_map[pos].texture == nullptr) {
+   return false; 
+  }
+  return true;
 }

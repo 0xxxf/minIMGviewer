@@ -41,7 +41,7 @@ struct Image {
 };
 
 struct TextureImageMap {
-  SDL_Texture *texture;
+  SDL_Texture *texture = nullptr;
   Image image;
 };
 
@@ -69,5 +69,7 @@ void allocate_memory(size_t current_file_index, size_t batch,
                      std::vector<std::string> &file_list, Application &app);
 
 void deallocate_memory(size_t start, size_t end, TextureImageMap *texture_map);
+
+bool check_alloc(TextureImageMap *texture_map, size_t pos);
 } // namespace miv
 #endif

@@ -145,12 +145,12 @@ void miv::run(Application &app, std::string path) {
             if(!check_alloc(texture_map, current)) {
               miv::log_stdout("Calling memory alloc", RESOURCE);
               allocate_memory(current, batch, texture_map, file_list, app);
-              miv::log_stdout("Calling memory dealloc", RESOURCE);
+              log_stdout("Calling memory dealloc", RESOURCE);
               deallocate_memory(current - batch, batch, texture_map);
             }
           }
           if ((dir_size / 2) == current) {
-            miv::log_stdout("Deallocating half of the loaded files", RESOURCE);
+            log_stdout("Deallocating half of the loaded files", RESOURCE);
             deallocate_memory(0, current, texture_map);
           }
           break;
@@ -207,7 +207,7 @@ void miv::allocate_memory(size_t current_file_index, size_t batch,
                           std::vector<std::string> &file_list,
                           Application &app) {
 #ifdef _TRACEMODE
-  miv::log_stdout<size_t>("Allocate texture memory at index", current_file_index, RESOURCE);
+  log_stdout<size_t>("Allocate texture memory at index", current_file_index, RESOURCE);
 #endif
   size_t target_batch;
   if ((current_file_index + batch) > file_list.size()) {
@@ -222,7 +222,7 @@ void miv::allocate_memory(size_t current_file_index, size_t batch,
     texture_map[current_file_index].texture = texture;
     texture_map[current_file_index].image = image;
 #ifdef _TRACEMODE
-    miv::log_stdout<std::string>("Loaded file", file_list[current_file_index], FS);
+    log_stdout<std::string>("Loaded file", file_list[current_file_index], FS);
 #endif
   }
 }
@@ -232,7 +232,7 @@ void miv::deallocate_memory(size_t start, size_t end,
                             TextureImageMap *texture_map) {
   for (size_t current = start - 1; current < end; current++) {
     //std::cout << "Destroying texture at map index:" << current << "\n";
-    miv::log_stdout<size_t>("Destroying texture at index", current, RESOURCE);
+    log_stdout<size_t>("Destroying texture at index", current, RESOURCE);
     SDL_DestroyTexture(texture_map[current].texture);
     //std::cout << "Size: " << sizeof(texture_map[current]) << "\n";
   }

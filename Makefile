@@ -1,4 +1,4 @@
-OBJS = src/main.cc src/application.h src/application.cc src/file_util.h src/file_util.cc src/memory.h
+OBJS = src/main.cc src/application.h src/application.cc src/file_util.h src/file_util.cc src/memory.h src/logger.h src/logger.cc
 
 CC = g++
 

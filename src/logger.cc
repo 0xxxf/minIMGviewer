@@ -14,7 +14,7 @@ void miv::log_stdout(std::string msg, LOG_TYPE type) {
   if(type == RESOURCE) {
     log_type_str = "RESOURCE";
   }
-
+  
   std::cout << std::put_time(std::localtime(&now), "%c") << " | " << 
   log_type_str << " | " <<
   msg << '\n';

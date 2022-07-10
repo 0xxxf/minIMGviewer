@@ -1,5 +1,6 @@
 #include "application.h"
 #include "file_util.h"
+#include "logger.h"
 
 void miv::init_sdl(Application &app, bool trace) {
   if (trace)
@@ -111,7 +112,7 @@ void miv::run(Application &app, std::string path) {
     app.quit = true;
     printf("Provided directory doesn't contain any images, exitting.\n");
   }
-  //TextureImageMap texture_map[file_list.size()];
+
   TextureImageMap *texture_map = new TextureImageMap[file_list.size()];
   size_t dir_size = file_list.size();
 
@@ -131,8 +132,6 @@ void miv::run(Application &app, std::string path) {
         app.quit = true;
       if (ev.type == SDL_KEYDOWN) {
         switch (ev.key.keysym.sym) {
-        // Replace those two (SDLK_RIGHT and SDLK_LEFT), can be handled by the
-        // same function (can they?).
         case SDLK_RIGHT:
           if (current < (int)file_list.size()) {
             current++;
@@ -142,12 +141,17 @@ void miv::run(Application &app, std::string path) {
             current = 0;
             SDL_RenderClear(app.renderer);
           }
-          /* WILD STUFF HERE */ if (current % 5 == 0) {
+          if (current % 5 == 0) { // Carefull
             if(!check_alloc(texture_map, current)) {
+              miv::log_stdout("Calling memory alloc", RESOURCE);
               allocate_memory(current, batch, texture_map, file_list, app);
+              miv::log_stdout("Calling memory dealloc", RESOURCE);
               deallocate_memory(current - batch, batch, texture_map);
             }
-            printf("Current index: %i", current);
+          }
+          if ((dir_size / 2) == current) {
+            miv::log_stdout("Deallocating half of the loaded files", RESOURCE);
+            deallocate_memory(0, current, texture_map);
           }
           break;
         case SDLK_LEFT:
@@ -172,14 +176,15 @@ void miv::run(Application &app, std::string path) {
           break;
         case SDLK_r:
           // Reset to original values
-          // Setting the modified flag to false creates some weird design
-          // approach, can we trust it?
           texture_map[current].image.mod = false;
           texture_map[current].image.dest.x = 0;
           texture_map[current].image.dest.y = 0;
           break;
         case SDLK_q:
           app.quit = true;
+          break;
+        case SDLK_p:
+          destroy_all(texture_map, file_list.size());
           break;
         }
       }
@@ -202,8 +207,7 @@ void miv::allocate_memory(size_t current_file_index, size_t batch,
                           std::vector<std::string> &file_list,
                           Application &app) {
 #ifdef _TRACEMODE
-  std::cout << "miv::alocate_memory() => Loading into index => "
-            << current_file_index << "\n";
+  miv::log_stdout<size_t>("Allocate texture memory at index", current_file_index, RESOURCE);
 #endif
   size_t target_batch;
   if ((current_file_index + batch) > file_list.size()) {
@@ -218,7 +222,7 @@ void miv::allocate_memory(size_t current_file_index, size_t batch,
     texture_map[current_file_index].texture = texture;
     texture_map[current_file_index].image = image;
 #ifdef _TRACEMODE
-    std::cout << "Loaded file" << file_list[current_file_index] << "\n";
+    miv::log_stdout<std::string>("Loaded file", file_list[current_file_index], FS);
 #endif
   }
 }
@@ -226,12 +230,11 @@ void miv::allocate_memory(size_t current_file_index, size_t batch,
 //FIXME: texture memory is not being freed for some reason
 void miv::deallocate_memory(size_t start, size_t end,
                             TextureImageMap *texture_map) {
-  std::cout << "miv::deallocate_memory() => Deallocating memory\n";
-  for (size_t current = start; current < end; current++) {
-    std::cout << "Destroying texture at map index:" << current << "\n";
+  for (size_t current = start - 1; current < end; current++) {
+    //std::cout << "Destroying texture at map index:" << current << "\n";
+    miv::log_stdout<size_t>("Destroying texture at index", current, RESOURCE);
     SDL_DestroyTexture(texture_map[current].texture);
-    texture_map[current].texture = nullptr;
-    std::cout << "Size: " << sizeof(texture_map[current]) << "\n";
+    //std::cout << "Size: " << sizeof(texture_map[current]) << "\n";
   }
 } 
 
@@ -240,4 +243,10 @@ bool miv::check_alloc(TextureImageMap *texture_map, size_t pos) {
    return false; 
   }
   return true;
+}
+
+void miv::destroy_all(TextureImageMap *texture_map, size_t size) {
+  for(size_t i = 0; i < size; i++) {
+    SDL_DestroyTexture(texture_map[i].texture);
+  }
 }

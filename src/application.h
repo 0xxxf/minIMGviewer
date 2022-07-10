@@ -31,9 +31,6 @@ struct Image {
   bool mod = false;
   std::string path;
 
-  /* Each image should carry a texture in order to be rendered*/
-  SDL_Texture *texture;
-
   /* Use this SDL_Rect as a surface for rendering the image, keep a copy in
    * original_val in case we want to go back to the original state */
   SDL_Rect dest;
@@ -71,5 +68,7 @@ void allocate_memory(size_t current_file_index, size_t batch,
 void deallocate_memory(size_t start, size_t end, TextureImageMap *texture_map);
 
 bool check_alloc(TextureImageMap *texture_map, size_t pos);
+
+void destroy_all(TextureImageMap *texture_map, size_t size);
 } // namespace miv
 #endif

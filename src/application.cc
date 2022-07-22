@@ -3,24 +3,26 @@
 #include "logger.h"
 
 void miv::init_sdl(Application &app, bool trace) {
+  log_stdout("Initializing SDL", EVENT);
   if (trace)
 #define _TRACEMODE
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-      printf("Couldnt initialize SDL, Error: %s\n", SDL_GetError());
+      log_stdout("Couldn't initialize SDL, Error:", SDL_GetError(), ERR);
       app.quit = true;
     }
   if (IMG_Init(IMG_INIT_PNG) < 0) {
-    printf("Couldnt initialize SDL_Image, Error: %s\n", SDL_GetError());
+    log_stdout("Couldn't initialize SDL, Error:", SDL_GetError(), ERR);
     app.quit = true;
   }
   app.window = SDL_CreateWindow("minimgview", SDL_WINDOWPOS_UNDEFINED,
                                 SDL_WINDOWPOS_UNDEFINED, 1600, 900,
                                 SDL_WINDOW_RESIZABLE);
   if (app.window == nullptr) {
-    printf("Window couldn't be created, Error: %s\n", SDL_GetError());
+    log_stdout("Couldn't initialize SDL, Error:", SDL_GetError(), ERR);
     app.quit = true;
   }
   app.renderer = SDL_CreateRenderer(app.window, -1, SDL_RENDERER_ACCELERATED);
+  log_stdout("SDL Initialized correctly", EVENT);
 }
 
 void miv::clean_up(Application &app) {
@@ -52,7 +54,6 @@ void miv::render(Application &app, TextureImageMap &img) {
     and the origin SDL_Rect data will be stored in original_val (we store this
     so we can render to the same window size when modifying the image).
   */
-
   if (img.image.mod) {
     SDL_SetWindowSize(app.window, img.image.original_val.w,
                       img.image.original_val.h);
@@ -157,11 +158,13 @@ void miv::run(Application &app, std::string path) {
         case SDLK_LEFT:
           if (current == 0) {
             current = (int)file_list.size() - 1;
-            allocate_memory(current - batch, batch, texture_map, file_list,
+            if(!check_alloc(texture_map, current-batch))
+              allocate_memory(current - batch, batch, texture_map, file_list,
                             app);
           }
           if (current % 5 == 0) {
-            allocate_memory(current - batch, batch, texture_map, file_list,
+            if(!check_alloc(texture_map, current-batch))
+              allocate_memory(current - batch, batch, texture_map, file_list,
                             app);
           }
           current--;
@@ -222,7 +225,7 @@ void miv::allocate_memory(size_t current_file_index, size_t batch,
     texture_map[current_file_index].texture = texture;
     texture_map[current_file_index].image = image;
 #ifdef _TRACEMODE
-    log_stdout<std::string>("Loaded file", file_list[current_file_index], FS);
+    log_stdout<std::string>("Memory allocated for file: ", file_list[current_file_index], FS);
 #endif
   }
 }

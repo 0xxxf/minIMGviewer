@@ -156,6 +156,9 @@ void miv::run(Application &app, std::string path) {
           }
           break;
         case SDLK_LEFT:
+          if(!check_alloc(texture_map, current-1)) {
+            allocate_memory(current - batch, batch, texture_map, file_list, app);
+          }
           if (current == 0) {
             current = (int)file_list.size() - 1;
             if(!check_alloc(texture_map, current-batch))
@@ -233,10 +236,16 @@ void miv::allocate_memory(size_t current_file_index, size_t batch,
 //FIXME: texture memory is not being freed for some reason
 void miv::deallocate_memory(size_t start, size_t end,
                             TextureImageMap *texture_map) {
-  for (size_t current = start - 1; current < end; current++) {
+  std::cout << "dealloc..............    CURRENT: " << start << "\n";
+  std::cout << "dealloc..............    END " << end << "\n";
+
+  end = start + 5;
+  for (size_t current = start; current < end; current++) {
     //std::cout << "Destroying texture at map index:" << current << "\n";
     log_stdout<size_t>("Destroying texture at index", current, RESOURCE);
     SDL_DestroyTexture(texture_map[current].texture);
+
+    texture_map[current].texture = nullptr;
     //std::cout << "Size: " << sizeof(texture_map[current]) << "\n";
   }
 } 

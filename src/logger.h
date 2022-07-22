@@ -10,8 +10,7 @@
    DATE TIME | LOG TYPE | MESSAGE
 */
 namespace miv {
-enum LOG_TYPE { FS, EVENT, RESOURCE };
-
+enum LOG_TYPE { FS , EVENT , RESOURCE, ERR };
 void log_stdout(std::string msg, LOG_TYPE type);
 
 template <typename T> void log_stdout(std::string title, T value, LOG_TYPE type) {
@@ -20,13 +19,16 @@ template <typename T> void log_stdout(std::string title, T value, LOG_TYPE type)
   std::string log_type_str = "NO TYPE";
 
   if (type == FS) {
-    log_type_str = "FILE";
+    log_type_str = "\033[1;36mFILE\033[0m"; 
   }
   if (type == EVENT) {
-    log_type_str = "EVENT";
+    log_type_str = "\033[1;32mEVENT\033[0m";
   }
   if (type == RESOURCE) {
-    log_type_str = "RESOURCE";
+    log_type_str = "\033[1;35mRESOURCE\033[0m";
+  }
+  if (type == ERR) {
+    log_type_str = "\031[1;32mERROR\033[0m";
   }
 
   std::cout << std::put_time(std::localtime(&now), "%c") << " | "

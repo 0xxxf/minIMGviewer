@@ -158,6 +158,7 @@ void miv::run(Application &app, std::string path) {
         case SDLK_LEFT:
           if(!check_alloc(texture_map, current-1)) {
             allocate_memory(current - batch, batch, texture_map, file_list, app);
+            deallocate_memory(current, batch, texture_map);
           }
           if (current == 0) {
             current = (int)file_list.size() - 1;
@@ -205,8 +206,6 @@ void miv::run(Application &app, std::string path) {
 SDL_Texture *miv::load_texture(std::string filename, Application &app) {
   return IMG_LoadTexture(app.renderer, filename.c_str());
 }
-
-miv::TextureImageMap miv::generate_texture_map() {}
 
 void miv::allocate_memory(size_t current_file_index, size_t batch,
                           TextureImageMap *texture_map,

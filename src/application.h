@@ -38,11 +38,10 @@ struct Image {
 };
 
 struct TextureImageMap {
+  // unsigned int id;
   SDL_Texture *texture = nullptr;
   Image image;
 };
-
-struct TextureImageMap generate_texture_map();
 
 /* This kind of works like a constructor, maybe think of a better solution or
    directly convert Image to a class, altought this creates some additional
@@ -65,7 +64,7 @@ void allocate_memory(size_t current_file_index, size_t batch,
                      TextureImageMap *texture_map,
                      std::vector<std::string> &file_list, Application &app);
 
-void deallocate_memory(size_t start, size_t end, TextureImageMap *texture_map);
+void deallocate_memory(size_t start, size_t batch, TextureImageMap *texture_map);
 
 bool check_alloc(TextureImageMap *texture_map, size_t pos);
 

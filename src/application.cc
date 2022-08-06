@@ -33,10 +33,6 @@ void miv::clean_up(Application &app) {
 }
 
 miv::Image miv::create_image(std::string path) {
-  /* @Refactor Although i made this struct when i started to write the program,
-   * it may be cleaner without using it and directly rendering files from a
-   * given path.
-   */
   Image img;
   img.path = path;
   img.x = 0;
@@ -46,7 +42,7 @@ miv::Image miv::create_image(std::string path) {
   return img;
 }
 
-void miv::render(Application &app, TextureImageMap &img) {
+void miv::render(Application &app, ImageTexture &img) {
   /*
     This may look "hacky", but i think it's perfectly fine, however i'll think
     of a better solution. An image will never be modified on it's first load, so
@@ -68,21 +64,31 @@ void miv::render(Application &app, TextureImageMap &img) {
   SDL_RenderPresent(app.renderer);
 }
 
-constexpr void miv::zoom_in(Image &img, int x, int y) {
-  img.mod = true;
-  img.dest.x = x - (img.dest.w * 2 - img.dest.w) / 2;
-  img.dest.y = y - (img.dest.h * 2 - img.dest.h) / 2;
-  img.dest.w *= 2;
-  img.dest.h *= 2;
+void miv::zoom_in(Image &img, int x, int y) {
+  // Save current x/y state
+  if (img.current_state < 5) {
+    img.state_x[img.current_state] = img.dest.x;
+    img.state_y[img.current_state] = img.dest.y;
+
+    img.mod = true;
+    img.dest.x = x - (img.dest.w * 2 - img.dest.w) / 2;
+    img.dest.y = y - (img.dest.h * 2 - img.dest.h) / 2;
+    img.dest.w *= 2;
+    img.dest.h *= 2;
+    img.current_state++;
+  }
 }
 
-constexpr void miv::zoom_out(Image &img, int x, int y) {
-  img.mod = true;
-  // TODO: this calculation doesn't work correctly (im bad at math lol)
-  img.dest.x = x - (img.dest.w * 2 - img.dest.w) / 2;
-  img.dest.y = y - (img.dest.h * 2 - img.dest.h) / 2;
-  img.dest.w /= 2;
-  img.dest.h /= 2;
+void miv::zoom_out(Image &img, int x, int y) {
+  if (img.current_state > 0) {
+    img.dest.x = img.state_x[img.current_state];
+    img.dest.y = img.state_y[img.current_state];
+
+    img.dest.w /= 2;
+    img.dest.h /= 2;
+    img.mod = true;
+    img.current_state--;
+  }
 }
 
 void miv::run(Application &app, std::string path) {
@@ -98,7 +104,6 @@ void miv::run(Application &app, std::string path) {
    * rest of the files in that directory, however if we receive a folder, get
    * all the files from the folder and render the first one.
    * Think of a cleaner way to do this */
-
   if (is_file(path)) {
     img = create_image(path);
     wd = get_wd(path);
@@ -114,10 +119,10 @@ void miv::run(Application &app, std::string path) {
     printf("Provided directory doesn't contain any images, exitting.\n");
   }
 
-  TextureImageMap *texture_map = new TextureImageMap[file_list.size()];
+  ImageTexture *texture_map = new ImageTexture[file_list.size()];
   size_t dir_size = file_list.size();
 
-  // Load memory in chuncks of 5 files
+  // Load memory in chunks of 5 files
   size_t batch = 5;
   size_t current_file_index = 0;
 
@@ -133,6 +138,7 @@ void miv::run(Application &app, std::string path) {
         app.quit = true;
       if (ev.type == SDL_KEYDOWN) {
         switch (ev.key.keysym.sym) {
+        /* RIGHT IMAGE */
         case SDLK_RIGHT:
           if (current < (int)file_list.size()) {
             current++;
@@ -143,7 +149,7 @@ void miv::run(Application &app, std::string path) {
             SDL_RenderClear(app.renderer);
           }
           if (current % 5 == 0) { // Carefull
-            if(!check_alloc(texture_map, current)) {
+            if (texture_map[current].texture == nullptr) {
               miv::log_stdout("Calling memory alloc", RESOURCE);
               allocate_memory(current, batch, texture_map, file_list, app);
               log_stdout("Calling memory dealloc", RESOURCE);
@@ -155,25 +161,28 @@ void miv::run(Application &app, std::string path) {
             deallocate_memory(0, current, texture_map);
           }
           break;
+        /* LEFT IMAGE */
         case SDLK_LEFT:
-          if(!check_alloc(texture_map, current-1)) {
-            allocate_memory(current - batch, batch, texture_map, file_list, app);
+          if (texture_map[current - 1].texture == nullptr) {
+            allocate_memory(current - batch, batch, texture_map, file_list,
+                            app);
             deallocate_memory(current, batch, texture_map);
           }
           if (current == 0) {
             current = (int)file_list.size() - 1;
-            if(!check_alloc(texture_map, current-batch))
+            if (texture_map[current - batch].texture == nullptr)
               allocate_memory(current - batch, batch, texture_map, file_list,
-                            app);
+                              app);
           }
           if (current % 5 == 0) {
-            if(!check_alloc(texture_map, current-batch))
+            if (texture_map[current - batch].texture == nullptr)
               allocate_memory(current - batch, batch, texture_map, file_list,
-                            app);
+                              app);
           }
           current--;
           break;
         case SDLK_z:
+          // FIXME: this broke at some point
           SDL_GetMouseState(&mouse_x, &mouse_y);
           zoom_in(texture_map[current].image, mouse_x, mouse_y);
           break;
@@ -208,56 +217,52 @@ SDL_Texture *miv::load_texture(std::string filename, Application &app) {
 }
 
 void miv::allocate_memory(size_t current_file_index, size_t batch,
-                          TextureImageMap *texture_map,
+                          ImageTexture *texture_map,
                           std::vector<std::string> &file_list,
                           Application &app) {
 #ifdef _TRACEMODE
-  log_stdout<size_t>("Allocate texture memory at index", current_file_index, RESOURCE);
+  log_stdout<size_t>("Allocate texture memory at index", current_file_index,
+                     RESOURCE);
 #endif
+
   size_t target_batch;
   if ((current_file_index + batch) > file_list.size()) {
     target_batch = file_list.size() - (file_list.size() - current_file_index);
   } else {
     target_batch = current_file_index + batch;
   }
-  for (; current_file_index < target_batch; current_file_index++) {
-    std::string curr_file = file_list.at(current_file_index);
-    auto image = create_image(curr_file);
+
+  for (size_t i = current_file_index; i < target_batch; i++) {
+    std::string curr_file = file_list.at(i);
+
+    Image image = create_image(curr_file);
     SDL_Texture *texture = load_texture(curr_file, app);
-    texture_map[current_file_index].texture = texture;
-    texture_map[current_file_index].image = image;
+
+    texture_map[i].texture = texture;
+    texture_map[i].image = image;
+
 #ifdef _TRACEMODE
-    log_stdout<std::string>("Memory allocated for file: ", file_list[current_file_index], FS);
+    log_stdout<std::string>(
+        "Memory allocated for file: ", file_list[i], FS);
 #endif
   }
 }
 
-//FIXME: texture memory is not being freed for some reason
 void miv::deallocate_memory(size_t start, size_t end,
-                            TextureImageMap *texture_map) {
-  std::cout << "dealloc..............    CURRENT: " << start << "\n";
-  std::cout << "dealloc..............    END " << end << "\n";
-
+                            ImageTexture *texture_map) {
   end = start + 5;
   for (size_t current = start; current < end; current++) {
-    //std::cout << "Destroying texture at map index:" << current << "\n";
     log_stdout<size_t>("Destroying texture at index", current, RESOURCE);
+
     SDL_DestroyTexture(texture_map[current].texture);
-
     texture_map[current].texture = nullptr;
-    //std::cout << "Size: " << sizeof(texture_map[current]) << "\n";
   }
-} 
-
-bool miv::check_alloc(TextureImageMap *texture_map, size_t pos) {
-  if(texture_map[pos].texture == nullptr) {
-   return false; 
-  }
-  return true;
 }
 
-void miv::destroy_all(TextureImageMap *texture_map, size_t size) {
-  for(size_t i = 0; i < size; i++) {
+
+
+void miv::destroy_all(ImageTexture *texture_map, size_t size) {
+  for (size_t i = 0; i < size; i++) {
     SDL_DestroyTexture(texture_map[i].texture);
   }
 }

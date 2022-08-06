@@ -15,7 +15,6 @@ struct Application {
   SDL_Renderer *renderer = nullptr;
   SDL_Window *window = nullptr;
   SDL_Surface *surface = nullptr;
-
   bool quit = false;
 };
 
@@ -35,9 +34,14 @@ struct Image {
    * original_val in case we want to go back to the original state */
   SDL_Rect dest;
   SDL_Rect original_val;
+
+  unsigned int state_x[5];
+  unsigned int state_y[5];
+
+  size_t current_state = 0;
 };
 
-struct TextureImageMap {
+struct ImageTexture {
   // unsigned int id;
   SDL_Texture *texture = nullptr;
   Image image;
@@ -50,24 +54,24 @@ Image create_image(std::string path);
 
 void init_sdl(Application &app, bool trace);
 
-void render(Application &app, TextureImageMap &img);
+void render(Application &app, ImageTexture &img);
 
 void run(Application &app, std::string path);
 void clean_up(Application &app);
 
-constexpr void zoom_in(Image &img, int x, int y);
-constexpr void zoom_out(Image &img, int x, int y);
+void zoom_in(Image &img, int x, int y);
+void zoom_out(Image &img, int x, int y);
 
 SDL_Texture *load_texture(std::string filename, Application &app);
 
 void allocate_memory(size_t current_file_index, size_t batch,
-                     TextureImageMap *texture_map,
+                     ImageTexture *texture_map,
                      std::vector<std::string> &file_list, Application &app);
 
-void deallocate_memory(size_t start, size_t batch, TextureImageMap *texture_map);
+void deallocate_memory(size_t start, size_t batch, ImageTexture *texture_map);
 
-bool check_alloc(TextureImageMap *texture_map, size_t pos);
+bool check_alloc(ImageTexture *texture_map, size_t pos);
 
-void destroy_all(TextureImageMap *texture_map, size_t size);
+void destroy_all(ImageTexture *texture_map, size_t size);
 } // namespace miv
 #endif

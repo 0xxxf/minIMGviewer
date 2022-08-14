@@ -8,13 +8,21 @@
 #include <string>
 #include <vector>
 
+#ifdef _WIN32
+#include <Windows.h>
+#endif
 
 namespace miv {
 
 struct Application {
   SDL_Renderer *renderer = nullptr;
+  SDL_Renderer *options_renderer = nullptr;
+
   SDL_Window *window = nullptr;
+  SDL_Window *options_window = nullptr;
+
   SDL_Surface *surface = nullptr;
+
   bool quit = false;
 };
 

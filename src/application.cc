@@ -93,7 +93,7 @@ void miv::zoom_out(Image &img, int x, int y) {
 
 void miv::run(Application &app, std::string path) {
   SDL_Event ev;
-  int current = 0;
+  size_t current = 0;
   int mouse_x, mouse_y;
 
   std::string wd;
@@ -140,9 +140,9 @@ void miv::run(Application &app, std::string path) {
         switch (ev.key.keysym.sym) {
         /* RIGHT IMAGE */
         case SDLK_RIGHT:
-          if (current < (int)file_list.size()) {
+          if (current < file_list.size()) {
             current++;
-            if (current == (int)file_list.size() - 1)
+            if (current == file_list.size() - 1)
               current = 0;
           } else {
             current = 0;
@@ -150,7 +150,7 @@ void miv::run(Application &app, std::string path) {
           }
           if (current % 5 == 0) { // Carefull
             if (texture_map[current].texture == nullptr) {
-              miv::log_stdout("Calling memory alloc", RESOURCE);
+              log_stdout("Calling memory alloc", RESOURCE);
               allocate_memory(current, batch, texture_map, file_list, app);
               log_stdout("Calling memory dealloc", RESOURCE);
               deallocate_memory(current - batch, batch, texture_map);
@@ -202,6 +202,14 @@ void miv::run(Application &app, std::string path) {
         case SDLK_p:
           destroy_all(texture_map, file_list.size());
           break;
+        case SDLK_o:
+          // Window options testing goes here:
+          // FIXME
+          app.options_window = SDL_CreateWindow(
+              "Options", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 640,
+              480, SDL_WINDOW_SHOWN);
+          app.options_renderer = SDL_CreateRenderer(app.options_window, -1, SDL_RENDERER_ACCELERATED);
+          break;
         }
       }
     }
@@ -242,8 +250,7 @@ void miv::allocate_memory(size_t current_file_index, size_t batch,
     texture_map[i].image = image;
 
 #ifdef _TRACEMODE
-    log_stdout<std::string>(
-        "Memory allocated for file: ", file_list[i], FS);
+    log_stdout<std::string>("Memory allocated for file: ", file_list[i], FS);
 #endif
   }
 }
@@ -258,8 +265,6 @@ void miv::deallocate_memory(size_t start, size_t end,
     texture_map[current].texture = nullptr;
   }
 }
-
-
 
 void miv::destroy_all(ImageTexture *texture_map, size_t size) {
   for (size_t i = 0; i < size; i++) {

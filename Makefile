@@ -1,12 +1,23 @@
 OBJS = src/main.cc src/application.h src/application.cc src/file_util.h src/file_util.cc src/logger.h src/logger.cc
 
-CC = g++
+CC = clang++
 
-COMPILER_FLAGS = -Wall -Wextra -Wpedantic -O2 -std=c++2a -static-libstdc++ -DDEBUG
+detected_OS := $(shell uname)
 
-LINKER_FLAGS = -Iinclude -Llib -lmingw32 -lSDL2main -lSDL2 -lSDL2_image  
+ifeq ($(detected_OS),Windows)
+	CFLAGS = -Wall -Wextra -Wpedantic -O2 -std=c++17 
+	LFLAGS = -Iinclude -Llib  -lmingw32 -lSDL2main -lSDL2 -lSDL2_image  
+endif
+ifeq ($(detected_OS),Darwin)
+	CFLAGS = -Wall -Wextra -Wpedantic -O2 -std=c++17 -I/opt/homebrew/include/ -D_THREAD_SAFE
+	LFLAGS =  -Iinclude -L/opt/homebrew/lib -lSDL2 -lSDL2_image
+endif
+ifeq ($(detected_OS),Linux)
+	CFLAGS = -Wall -Wextra -Wpedantic -O2 -std=c++17 
+	LFLAGS = -Iinclude -Llib -lSDL2main -lSDL2 -lSDL2_image  
+endif
 
 OBJ_NAME = imgview
 
 all : $(OBJS)
-	$(CC) $(OBJS) $(COMPILER_FLAGS) $(LINKER_FLAGS) -o $(OBJ_NAME)
+	$(CC) $(OBJS) $(CFLAGS) $(LFLAGS)
